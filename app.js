@@ -2,6 +2,7 @@ import fs from "fs";
 import express from "express";
 import http from "http";
 import mime from "mime-types";
+import path from "path";
 
 // fs.readFile("sample.txt", "utf8", (err, data)=>{
 //     if(err){
@@ -73,27 +74,69 @@ import mime from "mime-types";
 //     console.log("Server is running on port 3000");
 //   })
 
-const server = http.createServer((req, res) => {
-  if (req.method === "GET") {
-    let reqUrl = req.url;
+// const server = http.createServer((req, res) => {
+//   if (req.method === "GET") {
+//     let reqUrl = req.url;
 
-    if (reqUrl === "/") {
-      reqUrl = "/index.html";
-    }
+//     if (reqUrl === "/") {
+//       reqUrl = "/index.html";
+//     }
 
-    const filePath = "../barber_shop" + reqUrl;
+//     const filePath = "../barber_shop" + reqUrl;
 
-    fs.readFile(filePath, (err, data) => {
-      if (err) {
-        res.writeHead(404, { "content-type": "text/html" });
-        res.end("<h1>404 Not Found</h1>");
-        return;
-      }
+//     fs.readFile(filePath, (err, data) => {
+//       if (err) {
+//         res.writeHead(404, { "content-type": "text/html" });
+//         res.end("<h1>404 Not Found</h1>");
+//         return;
+//       }
 
-      res.writeHead(200, { "content-type": mime.lookup(filePath) });
-      res.end(data);
-    });
-  }
+//       res.writeHead(200, { "content-type": mime.lookup(filePath) });
+//       res.end(data);
+//     });
+//   }
+// });
+
+// server.listen(1212, (err) => {
+//   if (err) {
+//     console.log(err);
+//   }
+//   console.log("Your server is running");
+// });
+import mysql from "mysql2";
+
+const server = express();
+server.use(express.json());
+
+const connection = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "sample_db",
+});
+
+connection.connect((err) => {
+  if (err) throw err;
+  console.log("DB connected");
+});
+
+server.post("/product", (req, res) => {
+  const { product_name, product_url } = req.body;
+
+  let sql = "INSERT INTO product(product_name, product_url) VALUES (?, ?)";
+
+  connection.query(sql, [product_name, product_url], (err, result) => {
+    if (err) throw err;
+    console.log(result);
+  });
+});
+
+server.get("/view", (req, res) => {
+  let sql = "SELECT * from product";
+  connection.query(sql, (err, results) => {
+    if (err) throw err;
+    res.json(results);
+  });
 });
 
 server.listen(1212, (err) => {
